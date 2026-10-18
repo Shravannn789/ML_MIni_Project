@@ -3,6 +3,9 @@ logs/
 .venv/
 venv/
 
+# refreshed market cache (the bundled snapshot in data/raw is committed)
+data/cache/
+
 # Freebuff app-internal state (contains a project UUID, not source)
 .freebuff/
 

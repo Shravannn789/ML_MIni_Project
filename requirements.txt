@@ -2,10 +2,13 @@
 # Installing older majors may break TargetEncoder's cross-fitting behaviour.
 pandas>=3.0
 numpy>=2.5
+scipy>=1.16
 scikit-learn>=1.9
 xgboost>=3.4
 shap>=0.54
 matplotlib>=3.11
+plotly>=7.0
 streamlit>=1.66
 joblib>=1.5
+requests>=2.31
 pyarrow>=26.0

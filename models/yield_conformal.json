@@ -1,0 +1,7 @@
+{
+  "coverage": 0.9,
+  "q_log_scale": 0.33127771073265305,
+  "n_calibration": 31608,
+  "calib_fraction": 0.1,
+  "note": "interval = prediction +- q on log1p(t/ha); invert with expm1"
+}

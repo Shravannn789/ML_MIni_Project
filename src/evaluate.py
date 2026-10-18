@@ -72,17 +72,21 @@ def plot_model_comparison() -> None:
     clf = pd.read_csv(config.REPORTS_DIR / "model_comparison_classification.csv", index_col=0)
     reg = pd.read_csv(config.REPORTS_DIR / "model_comparison_regression.csv", index_col=0)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 3.4))
+    fig, axes = plt.subplots(1, 3, figsize=(13, 3.4))
     c = clf.sort_values("accuracy")
     axes[0].barh(c.index, c["accuracy"], color="#4C72B0")
     axes[0].set_xlim(max(0, c["accuracy"].min() - 0.08), 1.0)
-    axes[0].set_title("Figure 4 - Classification accuracy (crop recommendation)")
+    axes[0].set_title("Figure 4 - Classification accuracy")
     axes[0].set_xlabel("accuracy")
 
     r = reg.sort_values("r2_log")
     axes[1].barh(r.index, r["r2_log"], color="#55A868")
-    axes[1].set_title("Figure 5 - Regression R2 on log yield")
+    axes[1].set_title("Figure 5a - Regression R2 (random split)")
     axes[1].set_xlabel("R2 (log scale)")
+
+    axes[2].barh(r.index, r["temporal_r2_log"], color="#C44E52")
+    axes[2].set_title("Figure 5b - Regression R2 (temporal split)")
+    axes[2].set_xlabel("R2 (log scale), train<=2016, test later")
     _save(fig, "fig_04_05_model_comparison.png")
 
 
@@ -151,15 +155,15 @@ def main() -> None:
         ("Crop recommendation (classification)", "classification", "accuracy"),
         ("Yield forecast (regression)", "regression", "r2_log"),
     ]:
-        lines += [f"## {task}", "", "| Model | " + " | ".join(
-            k for k in metrics[key]["models"][metrics[key]["best_model"]]
-        ) + " |"]
+        rows = metrics[key]["models"]
+        cols = [k for k in rows[metrics[key]["best_model"]]
+                if isinstance(rows[metrics[key]["best_model"]][k], (int, float))]
+        lines += [f"## {task}", "", "| Model | " + " | ".join(cols) + " |"]
         header = lines[-1]
         lines.append("|" + "---|" * (header.count("|") - 1))
-        for name, row in sorted(
-            metrics[key]["models"].items(), key=lambda kv: kv[1][metric], reverse=True
-        ):
-            cells = " | ".join(f"{v:.4f}" if isinstance(v, float) else str(v) for v in row.values())
+        for name, row in sorted(rows.items(), key=lambda kv: kv[1][metric], reverse=True):
+            cells = " | ".join(f"{row[c]:.4f}" if c in row and isinstance(row[c], float) else str(row.get(c, ""))
+                               for c in cols)
             lines.append(f"| {name} | {cells} |")
         lines.append("")
     (config.REPORTS_DIR / "results_summary.md").write_text("\n".join(lines), encoding="utf-8")

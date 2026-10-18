@@ -2,9 +2,11 @@
 
 Two tasks, two sources:
 
-1. ``crop_recommendation.csv`` - 2,200 rows, 7 soil/climate features, 22 crop classes.
-2. ``crop_production.csv``     - 246,091 rows of Indian district-level production,
-   which we turn into a *yield* regression problem (tonnes per hectare).
+1. ``crop_recommendation.csv``          - 2,200 rows, 7 soil/climate features,
+   22 crop classes.
+2. ``crop_production_1997_2023.csv``    - 402,342 rows of Indian district-level
+   production from the DES (Ministry of Agriculture), 1997-98 to 2022-23, which
+   we turn into a *yield* regression problem (tonnes per hectare).
 
 Every cleaning decision is explained where it happens, because §8 of the report
 has to justify each one.
@@ -32,12 +34,18 @@ def load_recommendation() -> pd.DataFrame:
 
 # --------------------------------------------------------------------- task 2
 def load_production() -> pd.DataFrame:
-    """Load the raw district-level production table, unmodified."""
-    if not config.PROD_FILE.exists():
-        raise FileNotFoundError(
-            f"{config.PROD_FILE} missing. Re-download from {config.PROD_SOURCE}."
-        )
-    return pd.read_csv(config.PROD_FILE)
+    """Load the raw district-level production table, unmodified.
+
+    Prefers the DES 1997-2023 file; falls back to the legacy Kaggle mirror
+    (1997-2015) so an older checkout of this repository still runs.
+    """
+    if config.PROD_FILE.exists():
+        return pd.read_csv(config.PROD_FILE)
+    if config.PROD_LEGACY_FILE.exists():
+        return pd.read_csv(config.PROD_LEGACY_FILE)
+    raise FileNotFoundError(
+        f"{config.PROD_FILE} missing. Re-download from {config.PROD_SOURCE}."
+    )
 
 
 def build_yield_frame(df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dict]:
@@ -45,17 +53,17 @@ def build_yield_frame(df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dic
 
     Cleaning rules, in order:
 
-    * Drop rows where ``Production`` or ``Area`` is missing (3,730 rows).
+    * Drop rows where ``Production`` or ``Area`` is missing.
     * Drop rows where either is <= 0. A zero production row is not a real harvest
-      observation, and a zero/negative area makes the ratio undefined (3,523 rows).
+      observation, and a zero/negative area makes the ratio undefined.
     * ``yield = Production / Area`` (tonnes per hectare).
     * Remove yields above ``YIELD_CEILING`` (250 t/ha) as unit errors.
     * Winsorise what remains **within each crop** at the 99.5th percentile.
       A global threshold cannot work: real yields differ by two orders of
-      magnitude between crops (sugarcane ~53 t/ha, rice ~2 t/ha). The source also
-      contains unit-entry errors - 969 rows exceed 1,000 t/ha, e.g. Punjab
-      sugarcane with Area=3 and Production=264,000, i.e. acres recorded as hectares.
-      Clipping per crop removes those without discarding legitimate high yields.
+      magnitude between crops (sugarcane ~80 t/ha, rice ~2 t/ha). Both archives
+      contain unit-entry errors (e.g. acres recorded as hectares), and coconut
+      has historically been reported in nuts rather than tonnes. Clipping per
+      crop removes those without discarding legitimate high yields.
 
     Returns the cleaned frame plus a dict of counts for the report.
     """
@@ -87,8 +95,8 @@ def build_yield_frame(df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dic
     n_clipped = int((work[config.YIELD_TARGET] > caps).sum())
     work[config.YIELD_TARGET] = work[config.YIELD_TARGET].clip(upper=caps)
 
-    # Guard: the year range matters because the report claims rainfall cannot be
-    # joined to this table (the rainfall archive starts where this one ends).
+    # Guard: year range is recorded because the report states how far the model
+    # can extrapolate, and the app refuses to forecast years outside it.
     stats = {
         "rows_raw": n_raw,
         "dropped_missing": int(n_dropped_missing),
