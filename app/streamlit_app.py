@@ -304,7 +304,4 @@ with tab3:
                f"models in `{config.MODELS_DIR.name}/`")
 
 st.divider()
-st.caption(
-    "Background: aerial view of agricultural fields in Punjab, India — "
-    "Wikimedia Commons, CC BY-SA 4.0 (blurred and dimmed for use as a backdrop)."
-)
+st.caption("“The farmer is the backbone of our nation.” — Lal Bahadur Shastri")
