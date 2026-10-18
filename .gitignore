@@ -14,3 +14,5 @@ __pycache__/
 # OS noise
 Thumbs.db
 .DS_Store
+
+models/yield_forecast.joblib
