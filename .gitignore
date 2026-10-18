@@ -1,0 +1,16 @@
+# local run artifacts
+logs/
+.venv/
+venv/
+
+# Freebuff app-internal state (contains a project UUID, not source)
+.freebuff/
+
+# python caches
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# OS noise
+Thumbs.db
+.DS_Store

@@ -1,2 +1,17 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Line endings
+# ------------
+# Everything text is stored as LF in the repository and checked out as LF.
+#
+# This is written as `text eol=lf` rather than the usual `text=auto` on purpose:
+# core.autocrlf=true is set system-wide here (C:/Program Files/Git/etc/gitconfig),
+# so `text=auto` alone makes every checkout rewrite LF as CRLF and every editor
+# re-warn about it. Attributes outrank core.autocrlf, so this rule wins.
+* text eol=lf
+
+# Data, trained artifacts and image assets are stored byte-for-byte and never
+# converted - normalising a 15 MB CSV or a JPEG would corrupt them.
+# These must come LAST: when a path matches several rules, the last one wins.
+data/**              -text
+models/**            -text
+reports/figures/**   -text
+app/assets/**        -text

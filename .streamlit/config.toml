@@ -1,0 +1,11 @@
+[theme]
+# Pinned rather than following the browser preference: the blurred farmland
+# backdrop is dark, so a light theme would put dark text on a dark image.
+base = "dark"
+primaryColor = "#5FA845"
+backgroundColor = "#0d1410"
+secondaryBackgroundColor = "#17221b"
+textColor = "#e9f1ea"
+
+[browser]
+gatherUsageStats = false
